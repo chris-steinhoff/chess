@@ -145,33 +145,40 @@ Game.prototype = {
 	getSquare: function(file, rank) {
 		return this.board[file + rank * 8];
 	},
-	setSquare: function(file, rank, square) {
-		this.board[file + (56 - rank * 8)] = square;
+	setSquare: function(square) {
+		this.board[square.file + square.rank * 8] = square;
 	}
 };
 
 function generateBoard(game, player) {
+	var time = performance.now();
+	// Generate the board
+	for(var r = 0 ; r < 8 ; ++r) {
+		for(var f = 0 ; f < 8 ; ++f) {
+			game.setSquare(new Square(null, f, r));
+		}
+	}
+	// Bind the board to the <table>
 	var tableFragment = document.createDocumentFragment();
-	for(var r = 0 ; r < 8 ; r++) { // foreach row
+	for(r = 7 ; r >= 0 ; --r) {
 		var rowFragment = document.createDocumentFragment();
-		for(var c = 0 ; c < 8 ; c++) { // foreach cell
+		for(f = 0 ; f < 8 ; ++f) {
+			var square = game.getSquare(f, r);
 			var td = rowFragment.appendChild(document.createElement("td"));
 			td.classList.add("square");
-			if((r + c) % 2 == 0) {
+			if((square.file + square.rank) % 2 == 0) {
 				td.classList.add("light");
 			} else {
 				td.classList.add("dark");
 			}
-			var square = new Square(td, c, r);
 			/*td.addEventListener("click", function(sq) {
 				return function(event) {
 					alert("file = " + sq.file + " ; rank = " + sq.rank);
 				}
 			}(square));*/
-			game.setSquare(c, r, square);
+			square.cell = td;
 		}
-		var row = tableFragment.appendChild(document.createElement("tr"));
-		row.appendChild(rowFragment);
+		tableFragment.appendChild(document.createElement("tr")).appendChild(rowFragment);
 	}
 
 	var piece = pieceFactory.createLightRook();
@@ -219,6 +226,9 @@ function generateBoard(game, player) {
 	var table = document.createElement("table");
 	table.id = "playing_surface";
 	table.appendChild(tableFragment);
+
+	time = performance.now() - time;
+	console.log("generated board in " + time + " ms");
 
 	return table;
 }
