@@ -18,31 +18,49 @@ function DarkPlayer() {
 DarkPlayer.prototype = Object.create(Player.prototype, {
 });
 
-function Square(cell, file, rank) {
-	this.cell = cell;
+function Square(file, rank) {
 	this.file = file;
 	this.rank = rank;
+
+	// Create the <td> that will be added to the <table>
+	this.cell = document.createElement("td");
+	this.cell.classList.add("square");
+	if((file + rank) % 2 == 0) {
+		this.cell.classList.add("light");
+	} else {
+		this.cell.classList.add("dark");
+	}
+	// Create a placeholder child to swap out when the piece is set
+	this.placeholder = document.createElement("span");
+	this.cell.appendChild(this.placeholder);
+	/*this.cell.addEventListener("click", function(sq) {
+		return function(event) {
+			alert("file = " + sq.file + " ; rank = " + sq.rank);
+		}
+	}(this));*/
 }
 Square.prototype = {
-	cell: null,
 	file: null,
 	rank: null,
+	cell: null,
+	placeholder: null,
 	piece_: null,
 	set piece(piece) {
 		this.piece_ = piece;
 		if(piece) {
-			var icon = document.createElement("img");
-			icon.src = piece.icon;
-			this.cell.innerHTML = "";
-			this.cell.appendChild(icon);
+			this.cell.replaceChild(piece.icon, this.cell.firstChild);
 		} else {
 			this.cell.innerHTML = "";
 		}
+	},
+	clear: function() {
+		this.cell.replaceChild(this.placeholder, this.cell.firstChild);
 	}
 };
 
-function Piece(icon) {
-	this.icon = icon;
+function Piece(iconUrl) {
+	this.icon = document.createElement("img");
+	this.icon.src = iconUrl;
 }
 Piece.prototype = {
 	icon: null,
@@ -56,50 +74,50 @@ Piece.prototype = {
 	}
 };
 
-function King(icon) {
-	Piece.call(this, icon);
+function King(iconUrl) {
+	Piece.call(this, iconUrl);
 }
 King.prototype = Object.create(Piece.prototype, {
 });
 
-function Queen(icon) {
-	Piece.call(this, icon);
+function Queen(iconUrl) {
+	Piece.call(this, iconUrl);
 }
 Queen.prototype = Object.create(Piece.prototype, {
 });
 
-function Rook(icon) {
-	Piece.call(this, icon);
+function Rook(iconUrl) {
+	Piece.call(this, iconUrl);
 }
 Rook.prototype = Object.create(Piece.prototype, {
 });
 
-function Bishop(icon) {
-	Piece.call(this, icon);
+function Bishop(iconUrl) {
+	Piece.call(this, iconUrl);
 }
 Bishop.prototype = Object.create(Piece.prototype, {
 });
 
-function Knight(icon) {
-	Piece.call(this, icon);
+function Knight(iconUrl) {
+	Piece.call(this, iconUrl);
 }
 Knight.prototype = Object.create(Piece.prototype, {
 });
 
-function LightPawn(icon) {
-	Piece.call(this, icon);
+function LightPawn(iconUrl) {
+	Piece.call(this, iconUrl);
 }
 LightPawn.prototype = Object.create(Piece.prototype, {
 });
 
-function DarkPawn(icon) {
-	Piece.call(this, icon);
+function DarkPawn(iconUrl) {
+	Piece.call(this, iconUrl);
 }
 DarkPawn.prototype = Object.create(Piece.prototype, {
 });
 
 function Game() {
-	this.board = new Array(64);
+	this.board = [];
 }
 Game.prototype = {
 	board: null,
@@ -116,7 +134,7 @@ function generateBoard(game, player) {
 	// Generate the board
 	for(var r = 0 ; r < 8 ; ++r) {
 		for(var f = 0 ; f < 8 ; ++f) {
-			game.setSquare(new Square(null, f, r));
+			game.setSquare(new Square(f, r));
 		}
 	}
 	// Bind the board to the <table>
@@ -125,19 +143,7 @@ function generateBoard(game, player) {
 		var rowFragment = document.createDocumentFragment();
 		for(f = 0 ; f < 8 ; ++f) {
 			var square = game.getSquare(f, r);
-			var td = rowFragment.appendChild(document.createElement("td"));
-			td.classList.add("square");
-			if((square.file + square.rank) % 2 == 0) {
-				td.classList.add("light");
-			} else {
-				td.classList.add("dark");
-			}
-			/*td.addEventListener("click", function(sq) {
-				return function(event) {
-					alert("file = " + sq.file + " ; rank = " + sq.rank);
-				}
-			}(square));*/
-			square.cell = td;
+			rowFragment.appendChild(square.cell);
 		}
 		tableFragment.appendChild(document.createElement("tr")).appendChild(rowFragment);
 	}
