@@ -116,106 +116,68 @@ function DarkPawn(iconUrl) {
 DarkPawn.prototype = Object.create(Piece.prototype, {
 });
 
-function Game() {
+function Board() {
 	this.board = [];
+	for(var r = 0 ; r < 8 ; ++r) {
+		for(var f = 0 ; f < 8 ; ++f) {
+			this.board[f + r * 8] = new Square(f, r);
+		}
+	}
 }
-Game.prototype = {
+Board.prototype = {
 	board: null,
 	getSquare: function(file, rank) {
 		return this.board[file + rank * 8];
-	},
-	setSquare: function(square) {
-		this.board[square.file + square.rank * 8] = square;
 	}
 };
 
-function generateBoard(game, player) {
+function renderBoard(board, player) {
 	var time = performance.now();
-	// Generate the board
-	for(var r = 0 ; r < 8 ; ++r) {
-		for(var f = 0 ; f < 8 ; ++f) {
-			game.setSquare(new Square(f, r));
-		}
-	}
 	// Bind the board to the <table>
 	var tableFragment = document.createDocumentFragment();
-	for(r = 7 ; r >= 0 ; --r) {
+	for(var r = 7 ; r >= 0 ; --r) {
 		var rowFragment = document.createDocumentFragment();
-		for(f = 0 ; f < 8 ; ++f) {
-			var square = game.getSquare(f, r);
+		for(var f = 0 ; f < 8 ; ++f) {
+			var square = board.getSquare(f, r);
 			rowFragment.appendChild(square.cell);
 		}
 		tableFragment.appendChild(document.createElement("tr")).appendChild(rowFragment);
 	}
 
-	// Creates the Pieces and places them on a square
-	var pieceFactory = {
-		setSquare: function(piece, file, rank) {
-			piece.square = game.getSquare(file, rank);
-			return piece;
-		},
-		createLightKing: function(file, rank) {
-			return this.setSquare(new King("img/kl.svg"), file, rank);
-		},
-		createDarkKing: function(file, rank) {
-			return this.setSquare(new King("img/kd.svg"), file, rank);
-		},
-		createLightQueen: function(file, rank) {
-			return this.setSquare(new Queen("img/ql.svg"), file, rank);
-		},
-		createDarkQueen: function(file, rank) {
-			return this.setSquare(new Queen("img/qd.svg"), file, rank);
-		},
-		createLightRook: function(file, rank) {
-			return this.setSquare(new Rook("img/rl.svg"), file, rank);
-		},
-		createDarkRook: function(file, rank) {
-			return this.setSquare(new Rook("img/rd.svg"), file, rank);
-		},
-		createLightBishop: function(file, rank) {
-			return this.setSquare(new Bishop("img/bl.svg"), file, rank);
-		},
-		createDarkBishop: function(file, rank) {
-			return this.setSquare(new Bishop("img/bd.svg"), file, rank);
-		},
-		createLightKnight: function(file, rank) {
-			return this.setSquare(new Knight("img/nl.svg"), file, rank);
-		},
-		createDarkKnight: function(file, rank) {
-			return this.setSquare(new Knight("img/nd.svg"), file, rank);
-		},
-		createLightPawn: function(file, rank) {
-			return this.setSquare(new LightPawn("img/pl.svg"), file, rank);
-		},
-		createDarkPawn: function(file, rank) {
-			return this.setSquare(new DarkPawn("img/pd.svg"), file, rank);
-		}
-	};
+	// Define the major pieces
+	var pieceConfig = [
+		{ piece: new Rook("img/rl.svg"), file: 0, rank: 0 },
+		{ piece: new Knight("img/nl.svg"), file: 1, rank: 0 },
+		{ piece: new Bishop("img/bl.svg"), file: 2, rank: 0 },
+		{ piece: new Queen("img/ql.svg"), file: 3, rank: 0 },
+		{ piece: new King("img/kl.svg"), file: 4, rank: 0 },
+		{ piece: new Bishop("img/bl.svg"), file: 5, rank: 0 },
+		{ piece: new Knight("img/nl.svg"), file: 6, rank: 0 },
+		{ piece: new Rook("img/rl.svg"), file: 7, rank: 0 },
+		{ piece: new Rook("img/rd.svg"), file: 0, rank: 7 },
+		{ piece: new Knight("img/nd.svg"), file: 1, rank: 7 },
+		{ piece: new Bishop("img/bd.svg"), file: 2, rank: 7 },
+		{ piece: new Queen("img/qd.svg"), file: 3, rank: 7 },
+		{ piece: new King("img/kd.svg"), file: 4, rank: 7 },
+		{ piece: new Bishop("img/bd.svg"), file: 5, rank: 7 },
+		{ piece: new Knight("img/nd.svg"), file: 6, rank: 7 },
+		{ piece: new Rook("img/rd.svg"), file: 7, rank: 7 }
+	];
 
-	// Setup the light side
-	pieceFactory.createLightRook(0, 0);
-	pieceFactory.createLightKnight(1, 0);
-	pieceFactory.createLightBishop(2, 0);
-	pieceFactory.createLightQueen(3, 0);
-	pieceFactory.createLightKing(4, 0);
-	pieceFactory.createLightBishop(5, 0);
-	pieceFactory.createLightKnight(6, 0);
-	pieceFactory.createLightRook(7, 0);
-	for(var p = 0 ; p < 8 ; p++) {
-		pieceFactory.createLightPawn(p, 1);
+	// Place major pieces on the board
+	for(var p = 0 ; p < pieceConfig.length ; ++p) {
+		pieceConfig[p].piece.square = board.getSquare(
+			pieceConfig[p].file, pieceConfig[p].rank);
 	}
 
-	// Setup the dark side
-	pieceFactory.createDarkRook(0, 7);
-	pieceFactory.createDarkKnight(1, 7);
-	pieceFactory.createDarkBishop(2, 7);
-	pieceFactory.createDarkQueen(3, 7);
-	pieceFactory.createDarkKing(4, 7);
-	pieceFactory.createDarkBishop(5, 7);
-	pieceFactory.createDarkKnight(6, 7);
-	pieceFactory.createDarkRook(7, 7);
-	for(p = 0 ; p < 8 ; p++) {
-		pieceFactory.createDarkPawn(p, 6);
+	// Place light pawns
+	for(p = 0 ; p < 8 ; ++p) {
+		new LightPawn("img/pl.svg").square = board.getSquare(p, 1);
+	}
+
+	// Place dark pawns
+	for(p = 0 ; p < 8 ; ++p) {
+		new DarkPawn("img/pd.svg").square = board.getSquare(p, 6);
 	}
 
 	var table = document.createElement("table");
@@ -229,5 +191,5 @@ function generateBoard(game, player) {
 }
 
 window.addEventListener("load", function() {
-	document.getElementById("board").appendChild(generateBoard(new Game(), new LightPlayer()));
+	document.getElementById("board").appendChild(renderBoard(new Board(), new LightPlayer()));
 });
