@@ -44,152 +44,154 @@ Square.prototype = {
 	rank: null,
 	cell: null,
 	placeholder: null,
-	piece_: null,
-	set piece(piece) {
-		this.piece_ = piece;
-		if(piece) {
+	piece: null,
+	setPiece: function(piece) {
+		if(this.piece != null) {
+			this.piece.file = this.piece.rank = 0;
 			this.cell.replaceChild(piece.icon, this.cell.firstChild);
 		} else {
-			this.cell.innerHTML = "";
+			this.cell.appendChild(piece.icon);
 		}
-	},
-	clear: function() {
-		this.cell.replaceChild(this.placeholder, this.cell.firstChild);
+		this.piece = piece;
 	}
 };
 
-function Piece(iconUrl) {
+function Piece(iconUrl, file, rank) {
 	this.icon = document.createElement("img");
 	this.icon.src = iconUrl;
+	this.file = file;
+	this.rank = rank;
 }
 Piece.prototype = {
 	icon: null,
 	square_: null,
-	set square(square) {
-		this.square_ = square;
-		square.piece = this;
-	},
-	moveTo: function(square) {
-		this.square = square;
-	}
+	file: 0,
+	rank: 0
 };
 
-function King(iconUrl) {
-	Piece.call(this, iconUrl);
+function King(iconUrl, file, rank) {
+	Piece.call(this, iconUrl, file, rank);
 }
 King.prototype = Object.create(Piece.prototype, {
 });
 
-function Queen(iconUrl) {
-	Piece.call(this, iconUrl);
+function Queen(iconUrl, file, rank) {
+	Piece.call(this, iconUrl, file, rank);
 }
 Queen.prototype = Object.create(Piece.prototype, {
 });
 
-function Rook(iconUrl) {
-	Piece.call(this, iconUrl);
+function Rook(iconUrl, file, rank) {
+	Piece.call(this, iconUrl, file, rank);
 }
 Rook.prototype = Object.create(Piece.prototype, {
 });
 
-function Bishop(iconUrl) {
-	Piece.call(this, iconUrl);
+function Bishop(iconUrl, file, rank) {
+	Piece.call(this, iconUrl, file, rank);
 }
 Bishop.prototype = Object.create(Piece.prototype, {
 });
 
-function Knight(iconUrl) {
-	Piece.call(this, iconUrl);
+function Knight(iconUrl, file, rank) {
+	Piece.call(this, iconUrl, file, rank);
 }
 Knight.prototype = Object.create(Piece.prototype, {
 });
 
-function LightPawn(iconUrl) {
-	Piece.call(this, iconUrl);
+function LightPawn(iconUrl, file, rank) {
+	Piece.call(this, iconUrl, file, rank);
 }
 LightPawn.prototype = Object.create(Piece.prototype, {
 });
 
-function DarkPawn(iconUrl) {
-	Piece.call(this, iconUrl);
+function DarkPawn(iconUrl, file, rank) {
+	Piece.call(this, iconUrl, file, rank);
 }
 DarkPawn.prototype = Object.create(Piece.prototype, {
 });
 
 function Board() {
 	this.board = [];
+
+	// Generate the board model
 	for(var r = 0 ; r < 8 ; ++r) {
 		for(var f = 0 ; f < 8 ; ++f) {
 			this.board[f + r * 8] = new Square(f, r);
 		}
 	}
-}
-Board.prototype = {
-	board: null,
-	getSquare: function(file, rank) {
-		return this.board[file + rank * 8];
-	}
-};
 
-function renderBoard(board, player) {
-	var time = performance.now();
 	// Bind the board to the <table>
 	var tableFragment = document.createDocumentFragment();
-	for(var r = 7 ; r >= 0 ; --r) {
+	for(r = 7 ; r >= 0 ; --r) {
 		var rowFragment = document.createDocumentFragment();
-		for(var f = 0 ; f < 8 ; ++f) {
-			var square = board.getSquare(f, r);
+		for(f = 0 ; f < 8 ; ++f) {
+			var square = this.getSquare(f, r);
 			rowFragment.appendChild(square.cell);
 		}
 		tableFragment.appendChild(document.createElement("tr")).appendChild(rowFragment);
 	}
 
-	// Define the major pieces
-	var pieceConfig = [
-		{ piece: new Rook("img/rl.svg"), file: 0, rank: 0 },
-		{ piece: new Knight("img/nl.svg"), file: 1, rank: 0 },
-		{ piece: new Bishop("img/bl.svg"), file: 2, rank: 0 },
-		{ piece: new Queen("img/ql.svg"), file: 3, rank: 0 },
-		{ piece: new King("img/kl.svg"), file: 4, rank: 0 },
-		{ piece: new Bishop("img/bl.svg"), file: 5, rank: 0 },
-		{ piece: new Knight("img/nl.svg"), file: 6, rank: 0 },
-		{ piece: new Rook("img/rl.svg"), file: 7, rank: 0 },
-		{ piece: new Rook("img/rd.svg"), file: 0, rank: 7 },
-		{ piece: new Knight("img/nd.svg"), file: 1, rank: 7 },
-		{ piece: new Bishop("img/bd.svg"), file: 2, rank: 7 },
-		{ piece: new Queen("img/qd.svg"), file: 3, rank: 7 },
-		{ piece: new King("img/kd.svg"), file: 4, rank: 7 },
-		{ piece: new Bishop("img/bd.svg"), file: 5, rank: 7 },
-		{ piece: new Knight("img/nd.svg"), file: 6, rank: 7 },
-		{ piece: new Rook("img/rd.svg"), file: 7, rank: 7 }
+	// Create the <table>
+	this.table = document.createElement("table");
+	this.table.id = "playing_surface";
+	this.table.appendChild(tableFragment);
+}
+Board.prototype = {
+	board: null,
+	table: null,
+	getSquare: function(file, rank) {
+		return this.board[file + rank * 8];
+	},
+	setPieces: function(pieces) {
+		for(var p = 0 ; p < pieces.length ; ++p) {
+			var square = this.getSquare(
+				pieces[p].file, pieces[p].rank);
+			square.setPiece(pieces[p]);
+		}
+	}
+};
+
+function createNewGame(board) {
+	// Create the pieces
+	var pieces = [
+		// Light pieces
+		new Rook("img/rl.svg", 0, 0),
+		new Knight("img/nl.svg", 1, 0),
+		new Bishop("img/bl.svg", 2, 0),
+		new Queen("img/ql.svg", 3, 0),
+		new King("img/kl.svg", 4, 0),
+		new Bishop("img/bl.svg", 5, 0),
+		new Knight("img/nl.svg", 6, 0),
+		new Rook("img/rl.svg", 7, 0),
+		// Dark pieces
+		new Rook("img/rd.svg", 0, 7),
+		new Knight("img/nd.svg", 1, 7),
+		new Bishop("img/bd.svg", 2, 7),
+		new Queen("img/qd.svg", 3, 7),
+		new King("img/kd.svg", 4, 7),
+		new Bishop("img/bd.svg", 5, 7),
+		new Knight("img/nd.svg", 6, 7),
+		new Rook("img/rd.svg", 7, 7)
 	];
-
-	// Place major pieces on the board
-	for(var p = 0 ; p < pieceConfig.length ; ++p) {
-		pieceConfig[p].piece.square = board.getSquare(
-			pieceConfig[p].file, pieceConfig[p].rank);
+	// Light pawns
+	for(var p = 0 ; p < 8 ; ++p) {
+		pieces.push(new LightPawn("img/pl.svg", p, 1));
 	}
-
-	// Place light pawns
+	// Dark pawns
 	for(p = 0 ; p < 8 ; ++p) {
-		new LightPawn("img/pl.svg").square = board.getSquare(p, 1);
+		pieces.push(new DarkPawn("img/pd.svg", p, 6));
 	}
 
-	// Place dark pawns
-	for(p = 0 ; p < 8 ; ++p) {
-		new DarkPawn("img/pd.svg").square = board.getSquare(p, 6);
-	}
-
-	var table = document.createElement("table");
-	table.id = "playing_surface";
-	table.appendChild(tableFragment);
-
-	time = performance.now() - time;
-	console.log("generated board in " + time + " ms");
-
-	return table;
+	// Add the pieces to the board
+	board.setPieces(pieces);
 }
 
 window.addEventListener("load", function() {
-	document.getElementById("board").appendChild(renderBoard(new Board(), new LightPlayer()));
+	var time = performance.now();
+	var board = new Board();
+	createNewGame(board);
+	document.getElementById("board").appendChild(board.table);
+	time = performance.now() - time;
+	console.log("generated board in " + time + " ms");
 });
