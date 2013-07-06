@@ -199,6 +199,6 @@ window.addEventListener("load", function() {
 	console.log("generated board in " + time + " ms");
 
 	newGame.addEventListener("click", function() {
-		window.requestAnimationFrame(function(t) {createNewGame(board);});
+		createNewGame(board);
 	});
 });
