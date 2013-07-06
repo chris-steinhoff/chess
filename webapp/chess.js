@@ -30,9 +30,6 @@ function Square(file, rank) {
 	} else {
 		this.cell.classList.add("dark");
 	}
-	// Create a placeholder child to swap out when the piece is set
-	this.placeholder = document.createElement("span");
-	this.cell.appendChild(this.placeholder);
 	/*this.cell.addEventListener("click", function(sq) {
 		return function(event) {
 			alert("file = " + sq.file + " ; rank = " + sq.rank);
@@ -43,7 +40,6 @@ Square.prototype = {
 	file: null,
 	rank: null,
 	cell: null,
-	placeholder: null,
 	piece: null,
 	setPiece: function(piece) {
 		if(this.piece != null) {
@@ -153,6 +149,8 @@ Board.prototype = {
 };
 
 function createNewGame(board) {
+	var time = performance.now();
+
 	// Create the pieces
 	var pieces = [
 		// Light pieces
@@ -185,13 +183,22 @@ function createNewGame(board) {
 
 	// Add the pieces to the board
 	board.setPieces(pieces);
+
+	time = performance.now() - time;
+	console.log("generated new game in " + time + " ms");
 }
 
 window.addEventListener("load", function() {
+	var newGame = document.getElementById("new_game");
+	var boardd = document.getElementById("board");
+
 	var time = performance.now();
 	var board = new Board();
-	createNewGame(board);
-	document.getElementById("board").appendChild(board.table);
+	boardd.appendChild(board.table);
 	time = performance.now() - time;
 	console.log("generated board in " + time + " ms");
+
+	newGame.addEventListener("click", function() {
+		window.requestAnimationFrame(function(t) {createNewGame(board);});
+	});
 });
